@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -33,33 +34,28 @@ namespace simpleFilmBase.Controllers
             ViewBag.genresSelected = selectedGenres;
             if (!String.IsNullOrEmpty(voteString) && selectedGenres.Count > 0)
             {
-                float vote = float.Parse(voteString);
-                /*List<DataModels.movie> moviesList = (from movie in database.movies
-                                                     join movie_genre in database.movie_genre on movie.id equals movie_genre.movie_id into firstIds
-                                                     from movieGenreId in firstIds.DefaultIfEmpty()
-                                                     join genre in database.genres on movieGenreId.genre_id equals genre.id
-                                                     where movie.vote_average > vote
-                                                     select movie).ToList(); //more joins!*/
-                var movieGenreList = (from movie in database.movies
-                                      join movie_genre in database.movie_genre on movie.id equals movie_genre.movie_id into firstIds
-                                      from movieGenreId in firstIds.DefaultIfEmpty()
-                                      join genre in database.genres on movieGenreId.genre_id equals genre.id
-                                      where movie.vote_average > vote
-                                      group genre by movie.title into grupa
-                                      where selectedGenres.All(x => grupa.Contains(x))
-                                      //where selectedGenres.All(x => grupa.Contains(x))
-                                      select new Film()
-                                      {
-                                          id = int.Parse(grupa.Key.ToString()),
-                                          genresList = (from elem in grupa select elem.name).ToList()
-                                      }
-                                      ).ToList();
+                float vote = float.Parse(voteString, CultureInfo.InvariantCulture);
+                var selectedGenresIds = (from elem in selectedGenres select elem.id).ToList();
+                var movieIdList = (from genre in
+                                     (from gen in database.genres where selectedGenresIds.Contains(gen.id) select gen)
+                                 join movie_genre in database.movie_genre on genre.id equals movie_genre.genre_id
+                                 group movie_genre.moviegenremovieidfkey.id by movie_genre.movie_id into film
+                                 where film.Count() == selectedGenres.Count 
+                                 select new
+                                 {
+                                     movie_id = film.Key
+                                 }).ToList();
+                var moviesList = (from movies in movieIdList
+                              join movie in database.movies on movies.movie_id equals movie.id
+                              where movie.vote_average > vote
+                              orderby movie.vote_average descending
+                              select movie).ToList();
 
-                return View();
+                return View(moviesList);
             }
             else if(!String.IsNullOrEmpty(voteString))
             {
-                float vote = float.Parse(voteString);
+                float vote = float.Parse(voteString, CultureInfo.InvariantCulture);
                 var moviesList = (from movie in database.movies
                                   where movie.vote_average > vote
                                   select movie).ToList();
@@ -68,21 +64,22 @@ namespace simpleFilmBase.Controllers
             }
             else if(!String.IsNullOrEmpty(genresString))
             {
-                var movieGenreList = (from movie in database.movies
-                                      join movie_genre in database.movie_genre on movie.id equals movie_genre.movie_id into firstIds
-                                      from movieGenreId in firstIds.DefaultIfEmpty()
-                                      join genre in database.genres on movieGenreId.genre_id equals genre.id
-                                      group genre by movie.id into grupa
-                                      where selectedGenres.All(x => grupa.Contains(x))
-                                      //where selectedGenres.All(x => grupa.Contains(x))
-                                      select new Film()
-                                      {
-                                          id = int.Parse(grupa.Key.ToString()),
-                                          genresList = (from elem in grupa select elem.name).ToList()
-                                      }
-                                      ).ToList();
+                var selectedGenresIds = (from elem in selectedGenres select elem.id).ToList();
+                var movieIdList = (from genre in
+                                       (from gen in database.genres where selectedGenresIds.Contains(gen.id) select gen)
+                                   join movie_genre in database.movie_genre on genre.id equals movie_genre.genre_id
+                                   group movie_genre.moviegenremovieidfkey.id by movie_genre.movie_id into film
+                                   where film.Count() == selectedGenres.Count
+                                   select new
+                                   {
+                                       movie_id = film.Key
+                                   }).ToList();
+                var moviesList = (from movies in movieIdList
+                                 join movie in database.movies on movies.movie_id equals movie.id
+                                 orderby movie.vote_average descending
+                                 select movie).ToList();
 
-                return View();
+                return View(moviesList);
             }
             return View();
         }
