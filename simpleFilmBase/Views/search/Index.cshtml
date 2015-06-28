@@ -1,0 +1,67 @@
+﻿@model IEnumerable<DataModels.movie>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    List<DataModels.genre> genresSelected = (ViewBag.genresSelected == null) ?
+        new List<DataModels.genre>() : (List<DataModels.genre>)ViewBag.genresSelected;
+    ViewBag.Title = "Search";
+}
+
+<h2>Search</h2>
+
+@using (Html.BeginForm("Index","search"))
+{
+    <form class="glyphicon-search">
+        <input type="number" step="any" min="1" max="10" id="voteSearch" name="vote" placeholder="Vote" value="@ViewBag.vote" />
+        <br />
+            @{
+            int count = 0;
+            foreach (DataModels.genre elem in ViewBag.genres)
+            {
+                
+                @Html.CheckBox("genres", genresSelected.Any(g => g.name == elem.name), new { value = @elem.id })
+                @:&nbsp;
+                @Html.Label(elem.name)
+                @:&nbsp;
+                
+                count++;
+                if (count > 5)
+                {
+                    count = 0;
+                    <br/>
+                }
+            }
+            }
+        <br />
+        <input type="submit" id="Search" value="Search" />
+    </form>
+}
+<br />
+@if (Model != null)
+{
+    <table class="table">
+        <tr>
+            <th>
+                Title (Orginal Title)
+            </th>
+            <th>
+                Vote
+            </th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.title) ( @Html.DisplayFor(modelItem => item.original_title) )
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.vote_average)
+                </td>
+                <td>
+                    @Html.ActionLink("Details", "movie", "movie", new { id = item.id }, null)
+                </td>
+            </tr>
+        }
+
+    </table>
+}

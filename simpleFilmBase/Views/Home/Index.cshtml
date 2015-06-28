@@ -1,0 +1,33 @@
+﻿@model IEnumerable<DataModels.movie>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Top 20</h2>
+
+<table class="table">
+    <tr>
+        <th>
+            Title (Orginal Title)
+        </th>
+        <th>
+            Vote
+        </th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.title) ( @Html.DisplayFor(modelItem => item.original_title) )
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.vote_average)
+        </td>
+        <td>
+            @Html.ActionLink("Details", "movie", "movie", new { id = item.id }, null)
+        </td>
+    </tr>
+}
+
+</table>
